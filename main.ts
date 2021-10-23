@@ -1,56 +1,285 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import {App, Modal, Notice, Editor, Plugin, PluginSettingTab, Setting, request, MarkdownView} from 'obsidian';
+import type moment from "moment"
+import numeral from 'numeral'
 
-interface MyPluginSettings {
-	mySetting: string;
+declare global {
+	interface Window {
+		moment: typeof moment;
+	}
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+interface OuraUserInfo {
+	email: string;
+	gender: string;
+	height: number;
+	weight: number;
+	age: number;
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+interface OuraActivityEntries {
+	activity: OuraActivity[];
+}
+
+interface OuraActivity {
+	summary_date: string;
+	day_start: string;
+	day_end: string;
+	timezone: number;
+	score: number;
+	score_stay_active: number;
+	score_move_every_hour: number;
+	score_meet_daily_targets: number;
+	score_training_frequency: number;
+	score_training_volume: number;
+	score_recovery_time: number;
+	daily_movement: number;
+	non_wear: number;
+	rest: number;
+	inactive: number;
+	inactivity_alerts: number;
+	low: number;
+	medium: number;
+	high: number;
+	steps: number;
+	cal_total: number;
+	cal_active: number;
+	met_min_inactive: number;
+	met_min_low: number;
+	met_min_medium_plus: number;
+	met_min_medium: number;
+	met_min_high: number;
+	average_met: number;
+	class_5min: string;
+	met_1min: number[];
+	rest_mode_state: number;
+}
+
+interface OuraReadinessEntries {
+	readiness: OuraReadiness[];
+}
+
+interface OuraReadiness {
+	summary_date: string;
+	period_id: number;
+	score: number;
+	score_previous_night: number;
+	score_sleep_balance: number;
+	score_previous_day: number;
+	score_activity_balance: number;
+	score_resting_hr: number;
+	score_hrv_balance: number;
+	score_recovery_index: number;
+	score_temperature: number;
+	rest_mode_state: number;
+}
+
+interface OuraSleepEntries {
+	sleep: OuraSleep[];
+}
+
+interface OuraSleep {
+	awake: number;
+	bedtime_end: string;
+	bedtime_end_delta: number;
+	bedtime_start: string;
+	bedtime_start_delta: number;
+	breath_average: number;
+	deep: number;
+	duration: number;
+	efficiency: number;
+	hr_5min: number[];
+	hr_average: number;
+	hr_lowest: number;
+	hypnogram_5min: string;
+	is_longest: number;
+	light: number;
+	midpoint_at_delta: number;
+	midpoint_time: number;
+	onset_latency: number;
+	period_id: number;
+	rem: number;
+	restless: number;
+	rmssd: number;
+	rmssd_5min: number[];
+	score: number;
+	score_alignment: number;
+	score_deep: number;
+	score_disturbances: number;
+	score_efficiency: number;
+	score_latency: number;
+	score_rem: number;
+	score_total: number;
+	summary_date: string;
+	temperature_delta: number;
+	temperature_deviation: number;
+	temperature_trend_deviation: number;
+	timezone: number;
+	total: number;
+}
+
+interface OuraPluginSettings {
+	personalAccessToken: string;
+}
+
+const OURA_API_URL = 'https://api.ouraring.com/v1'
+
+const DEFAULT_SETTINGS: OuraPluginSettings = {
+	personalAccessToken: null
+}
+
+export default class OuraPlugin extends Plugin {
+	settings: OuraPluginSettings;
+
+	getToday() {
+		return window.moment().format('YYYY-MM-DD')
+	}
+
+	async getSleepData(theDate: string): Promise<OuraSleepEntries> {
+		if (this.settings.personalAccessToken) {
+			const params = new URLSearchParams()
+			const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
+			params.set('start', start)
+			params.set('end', theDate)
+			const data = await request({ url: `${OURA_API_URL}/sleep?${params.toString()}`, headers: {
+				'Authorization': `Bearer ${this.settings.personalAccessToken}`
+				} })
+
+			return JSON.parse(data) as OuraSleepEntries
+		}
+		return null
+	}
+
+	async getActivityData(theDate: string): Promise<OuraActivityEntries> {
+		if (this.settings.personalAccessToken) {
+			const params = new URLSearchParams()
+			const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
+			params.set('start', start)
+			params.set('end', theDate)
+			const data = await request({ url: `${OURA_API_URL}/activity?${params.toString()}`, headers: {
+				'Authorization': `Bearer ${this.settings.personalAccessToken}`
+				} })
+
+			return JSON.parse(data) as OuraActivityEntries
+		}
+		return null
+	}
+
+	async getReadinessData(theDate: string): Promise<OuraReadinessEntries> {
+		if (this.settings.personalAccessToken) {
+			const params = new URLSearchParams()
+			const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
+			params.set('start', start)
+			params.set('end', theDate)
+			const data = await request({ url: `${OURA_API_URL}/readiness?${params.toString()}`, headers: {
+				'Authorization': `Bearer ${this.settings.personalAccessToken}`
+				} })
+
+			return JSON.parse(data) as OuraReadinessEntries
+		}
+		return null
+	}
+
+	async getUserInfo(): Promise<OuraUserInfo> {
+		if (this.settings.personalAccessToken) {
+			const data = await request({ url: `${OURA_API_URL}/userinfo`, headers: {
+				'Authorization': `Bearer ${this.settings.personalAccessToken}`
+				} })
+			return JSON.parse(data) as OuraUserInfo
+		}
+		return null
+	}
+
+	iso8601ToTime(theString: string): string {
+		return window.moment(theString).format('HH:mm:ss')
+	}
+
+	minutesToHMS(minutes: number): string {
+		const hours = Math.floor(minutes / 60)
+		const minutesRemainder = minutes % 60
+
+		return `${numeral(hours).format('00')}:${numeral(minutesRemainder).format('00')}:00`
+	}
+
+	secondsToHMS(seconds: number): string {
+		const hours = Math.floor(seconds / 60 / 60)
+		const minutes = Math.floor(seconds / 60) % 60
+		const secondsRemainder = (seconds % 60)
+		return `${numeral(hours).format('00')}:${numeral(minutes).format('00')}:${numeral(secondsRemainder).format('00')}`
+	}
 
 	async onload() {
 		console.log('loading plugin');
 
 		await this.loadSettings();
 
-		this.addRibbonIcon('dice', 'Sample Plugin', () => {
-			new Notice('This is a notice!');
-		});
-
-		this.addStatusBarItem().setText('Status Bar Text');
+		this.addStatusBarItem().setText('Oura Ring');
 
 		this.addCommand({
-			id: 'open-sample-modal',
-			name: 'Open Sample Modal',
-			// callback: () => {
-			// 	console.log('Simple Callback');
-			// },
-			checkCallback: (checking: boolean) => {
-				let leaf = this.app.workspace.activeLeaf;
-				if (leaf) {
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-					return true;
-				}
-				return false;
+			id: 'insert-oura-ring-stats',
+			name: 'Insert Oura Ring Stats',
+			editorCallback: async (editor: Editor) => {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+				const activeDocument = activeView.file.basename
+
+				const metricsForDay = window.moment(activeDocument, 'YYYY-MM-DD', true).isValid() ? activeDocument : this.getToday()
+
+				console.log(`Grabbing Oura sleep / activity metrics for ${metricsForDay}`)
+				const sleepData = await this.getSleepData(metricsForDay)
+				const activityData = await this.getActivityData(metricsForDay)
+				const readinessData = await this.getReadinessData(metricsForDay)
+
+				const sleepEntry = sleepData.sleep[0]
+				const activityEntry = activityData.activity[0]
+				const readinessEntry = readinessData.readiness[0]
+
+				let sleepOutput = ''
+				sleepOutput += `- Bedtime Start: ${this.iso8601ToTime(sleepEntry.bedtime_start)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Bedtime End: ${this.iso8601ToTime(sleepEntry.bedtime_end)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Sleep Score: ${sleepEntry.score}`
+				sleepOutput += '\n'
+				sleepOutput += `- Sleep Efficiency: ${sleepEntry.efficiency}`
+				sleepOutput += '\n'
+				sleepOutput += `- Sleep Duration: ${this.secondsToHMS(sleepEntry.duration)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Total Sleep: ${this.secondsToHMS(sleepEntry.total)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Total Awake: ${this.secondsToHMS(sleepEntry.awake)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Sleep Latency: ${this.secondsToHMS(sleepEntry.onset_latency)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Light Sleep: ${this.secondsToHMS(sleepEntry.light)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Rem Sleep: ${this.secondsToHMS(sleepEntry.rem)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Deep Sleep: ${this.secondsToHMS(sleepEntry.deep)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Day Start: ${this.iso8601ToTime(activityEntry.day_start)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Day End: ${this.iso8601ToTime(activityEntry.day_end)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Activity Score: ${activityEntry.score}`
+				sleepOutput += '\n'
+				sleepOutput += `- Low Activity: ${this.minutesToHMS(activityEntry.low)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Medium Activity: ${this.minutesToHMS(activityEntry.medium)}`
+				sleepOutput += '\n'
+				sleepOutput += `- High Activity: ${this.minutesToHMS(activityEntry.high)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Rest Activity: ${this.minutesToHMS(activityEntry.rest)}`
+				sleepOutput += '\n'
+				sleepOutput += `- Steps: ${activityEntry.steps}`
+				sleepOutput += '\n'
+				sleepOutput += `- Readiness Score: ${readinessEntry.score}`
+
+				editor.replaceSelection(sleepOutput)
+
 			}
 		});
 
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		this.registerCodeMirror((cm: CodeMirror.Editor) => {
-			console.log('codemirror', cm);
-		});
-
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		this.addSettingTab(new OuraSettingTab(this.app, this));
 	}
 
 	onunload() {
@@ -66,47 +295,36 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+class OuraSettingTab extends PluginSettingTab {
+	plugin: OuraPlugin;
 
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		let {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: OuraPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
-	display(): void {
-		let {containerEl} = this;
+	async display(): Promise<void> {
+		let { containerEl } = this;
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+		containerEl.createEl('h2', {text: 'Oura Ring Settings'});
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName('Personal Access Token')
+			.setDesc('Available under https://cloud.ouraring.com/personal-access-tokens')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('Personal Access Token')
+				.setValue(this.plugin.settings.personalAccessToken)
 				.onChange(async (value) => {
 					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.personalAccessToken = value;
 					await this.plugin.saveSettings();
 				}));
+		if (this.plugin.settings.personalAccessToken) {
+			const userInfo = await this.plugin.getUserInfo()
+			containerEl.createEl('p', {text: `email: ${userInfo.email}`})
+		}
+
 	}
 }
