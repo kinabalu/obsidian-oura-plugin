@@ -71,45 +71,58 @@ export default class OuraPlugin extends Plugin {
 				const readinessEntry = readinessData.readiness[0]
 
 				let sleepOutput = ''
-				sleepOutput += `- Bedtime Start: ${this.iso8601ToTime(sleepEntry.bedtime_start)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Bedtime End: ${this.iso8601ToTime(sleepEntry.bedtime_end)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Sleep Score: ${sleepEntry.score}`
-				sleepOutput += '\n'
-				sleepOutput += `- Sleep Efficiency: ${sleepEntry.efficiency}`
-				sleepOutput += '\n'
-				sleepOutput += `- Sleep Duration: ${this.secondsToHMS(sleepEntry.duration)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Total Sleep: ${this.secondsToHMS(sleepEntry.total)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Total Awake: ${this.secondsToHMS(sleepEntry.awake)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Sleep Latency: ${this.secondsToHMS(sleepEntry.onset_latency)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Light Sleep: ${this.secondsToHMS(sleepEntry.light)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Rem Sleep: ${this.secondsToHMS(sleepEntry.rem)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Deep Sleep: ${this.secondsToHMS(sleepEntry.deep)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Day Start: ${this.iso8601ToTime(activityEntry.day_start)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Day End: ${this.iso8601ToTime(activityEntry.day_end)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Activity Score: ${activityEntry.score}`
-				sleepOutput += '\n'
-				sleepOutput += `- Low Activity: ${this.minutesToHMS(activityEntry.low)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Medium Activity: ${this.minutesToHMS(activityEntry.medium)}`
-				sleepOutput += '\n'
-				sleepOutput += `- High Activity: ${this.minutesToHMS(activityEntry.high)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Rest Activity: ${this.minutesToHMS(activityEntry.rest)}`
-				sleepOutput += '\n'
-				sleepOutput += `- Steps: ${activityEntry.steps}`
-				sleepOutput += '\n'
-				sleepOutput += `- Readiness Score: ${readinessEntry.score}`
+
+				if (sleepEntry) {
+					sleepOutput += `- Bedtime Start: ${this.iso8601ToTime(sleepEntry.bedtime_start)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Bedtime End: ${this.iso8601ToTime(sleepEntry.bedtime_end)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Sleep Score: ${sleepEntry.score}`
+					sleepOutput += '\n'
+					sleepOutput += `- Sleep Efficiency: ${sleepEntry.efficiency}`
+					sleepOutput += '\n'
+					sleepOutput += `- Sleep Duration: ${this.secondsToHMS(sleepEntry.duration)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Total Sleep: ${this.secondsToHMS(sleepEntry.total)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Total Awake: ${this.secondsToHMS(sleepEntry.awake)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Sleep Latency: ${this.secondsToHMS(sleepEntry.onset_latency)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Light Sleep: ${this.secondsToHMS(sleepEntry.light)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Rem Sleep: ${this.secondsToHMS(sleepEntry.rem)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Deep Sleep: ${this.secondsToHMS(sleepEntry.deep)}`
+				}
+
+				if (activityEntry) {
+					if (sleepEntry) {
+						sleepOutput += '\n'
+					}
+					sleepOutput += `- Day Start: ${this.iso8601ToTime(activityEntry.day_start)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Day End: ${this.iso8601ToTime(activityEntry.day_end)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Activity Score: ${activityEntry.score}`
+					sleepOutput += '\n'
+					sleepOutput += `- Low Activity: ${this.minutesToHMS(activityEntry.low)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Medium Activity: ${this.minutesToHMS(activityEntry.medium)}`
+					sleepOutput += '\n'
+					sleepOutput += `- High Activity: ${this.minutesToHMS(activityEntry.high)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Rest Activity: ${this.minutesToHMS(activityEntry.rest)}`
+					sleepOutput += '\n'
+					sleepOutput += `- Steps: ${activityEntry.steps}`
+				}
+
+				if (readinessEntry) {
+					if (sleepEntry || activityEntry) {
+						sleepOutput += '\n'
+					}
+					sleepOutput += `- Readiness Score: ${readinessEntry.score}`
+				}
 
 				editor.replaceSelection(sleepOutput)
 
