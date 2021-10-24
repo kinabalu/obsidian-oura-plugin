@@ -8,5 +8,10 @@ and copy the token into the settings for this plugin
 - Insert the data in a page which is formatted YYYY-MM-DD
 - Or insert into any page and it will use whatever today's date is
 
+### Installation
+The Oura Plugin for Obsidian release is pending review.
+
 ### Manual Installation
-Create an `obsidian-oura-plugin` folder under `.obsidian/plugins` in your vault. 
+Create an `obsidian-oura-plugin` folder under `.obsidian/plugins` in your vault. Add the 
+`main.js`, `manifest.json`, and the `styles.css` files from the 
+[latest release](https://github.com/kinabalu/obsidian-oura-plugin/releases) to the folder.
