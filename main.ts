@@ -1,6 +1,7 @@
-import {App, Modal, Notice, Editor, Plugin, PluginSettingTab, Setting, request, MarkdownView} from 'obsidian';
+import {App, Editor, Plugin, PluginSettingTab, Setting, MarkdownView} from 'obsidian';
 import type moment from "moment"
 import numeral from 'numeral'
+import OuraApi from "./oura-api";
 
 declare global {
 	interface Window {
@@ -8,120 +9,9 @@ declare global {
 	}
 }
 
-interface OuraUserInfo {
-	email: string;
-	gender: string;
-	height: number;
-	weight: number;
-	age: number;
-}
-
-interface OuraActivityEntries {
-	activity: OuraActivity[];
-}
-
-interface OuraActivity {
-	summary_date: string;
-	day_start: string;
-	day_end: string;
-	timezone: number;
-	score: number;
-	score_stay_active: number;
-	score_move_every_hour: number;
-	score_meet_daily_targets: number;
-	score_training_frequency: number;
-	score_training_volume: number;
-	score_recovery_time: number;
-	daily_movement: number;
-	non_wear: number;
-	rest: number;
-	inactive: number;
-	inactivity_alerts: number;
-	low: number;
-	medium: number;
-	high: number;
-	steps: number;
-	cal_total: number;
-	cal_active: number;
-	met_min_inactive: number;
-	met_min_low: number;
-	met_min_medium_plus: number;
-	met_min_medium: number;
-	met_min_high: number;
-	average_met: number;
-	class_5min: string;
-	met_1min: number[];
-	rest_mode_state: number;
-}
-
-interface OuraReadinessEntries {
-	readiness: OuraReadiness[];
-}
-
-interface OuraReadiness {
-	summary_date: string;
-	period_id: number;
-	score: number;
-	score_previous_night: number;
-	score_sleep_balance: number;
-	score_previous_day: number;
-	score_activity_balance: number;
-	score_resting_hr: number;
-	score_hrv_balance: number;
-	score_recovery_index: number;
-	score_temperature: number;
-	rest_mode_state: number;
-}
-
-interface OuraSleepEntries {
-	sleep: OuraSleep[];
-}
-
-interface OuraSleep {
-	awake: number;
-	bedtime_end: string;
-	bedtime_end_delta: number;
-	bedtime_start: string;
-	bedtime_start_delta: number;
-	breath_average: number;
-	deep: number;
-	duration: number;
-	efficiency: number;
-	hr_5min: number[];
-	hr_average: number;
-	hr_lowest: number;
-	hypnogram_5min: string;
-	is_longest: number;
-	light: number;
-	midpoint_at_delta: number;
-	midpoint_time: number;
-	onset_latency: number;
-	period_id: number;
-	rem: number;
-	restless: number;
-	rmssd: number;
-	rmssd_5min: number[];
-	score: number;
-	score_alignment: number;
-	score_deep: number;
-	score_disturbances: number;
-	score_efficiency: number;
-	score_latency: number;
-	score_rem: number;
-	score_total: number;
-	summary_date: string;
-	temperature_delta: number;
-	temperature_deviation: number;
-	temperature_trend_deviation: number;
-	timezone: number;
-	total: number;
-}
-
 interface OuraPluginSettings {
 	personalAccessToken: string;
 }
-
-const OURA_API_URL = 'https://api.ouraring.com/v1'
 
 const DEFAULT_SETTINGS: OuraPluginSettings = {
 	personalAccessToken: null
@@ -132,61 +22,6 @@ export default class OuraPlugin extends Plugin {
 
 	getToday() {
 		return window.moment().format('YYYY-MM-DD')
-	}
-
-	async getSleepData(theDate: string): Promise<OuraSleepEntries> {
-		if (this.settings.personalAccessToken) {
-			const params = new URLSearchParams()
-			const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
-			params.set('start', start)
-			params.set('end', theDate)
-			const data = await request({ url: `${OURA_API_URL}/sleep?${params.toString()}`, headers: {
-				'Authorization': `Bearer ${this.settings.personalAccessToken}`
-				} })
-
-			return JSON.parse(data) as OuraSleepEntries
-		}
-		return null
-	}
-
-	async getActivityData(theDate: string): Promise<OuraActivityEntries> {
-		if (this.settings.personalAccessToken) {
-			const params = new URLSearchParams()
-			const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
-			params.set('start', start)
-			params.set('end', theDate)
-			const data = await request({ url: `${OURA_API_URL}/activity?${params.toString()}`, headers: {
-				'Authorization': `Bearer ${this.settings.personalAccessToken}`
-				} })
-
-			return JSON.parse(data) as OuraActivityEntries
-		}
-		return null
-	}
-
-	async getReadinessData(theDate: string): Promise<OuraReadinessEntries> {
-		if (this.settings.personalAccessToken) {
-			const params = new URLSearchParams()
-			const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
-			params.set('start', start)
-			params.set('end', theDate)
-			const data = await request({ url: `${OURA_API_URL}/readiness?${params.toString()}`, headers: {
-				'Authorization': `Bearer ${this.settings.personalAccessToken}`
-				} })
-
-			return JSON.parse(data) as OuraReadinessEntries
-		}
-		return null
-	}
-
-	async getUserInfo(): Promise<OuraUserInfo> {
-		if (this.settings.personalAccessToken) {
-			const data = await request({ url: `${OURA_API_URL}/userinfo`, headers: {
-				'Authorization': `Bearer ${this.settings.personalAccessToken}`
-				} })
-			return JSON.parse(data) as OuraUserInfo
-		}
-		return null
 	}
 
 	iso8601ToTime(theString: string): string {
@@ -225,9 +60,11 @@ export default class OuraPlugin extends Plugin {
 				const metricsForDay = window.moment(activeDocument, 'YYYY-MM-DD', true).isValid() ? activeDocument : this.getToday()
 
 				console.log(`Grabbing Oura sleep / activity metrics for ${metricsForDay}`)
-				const sleepData = await this.getSleepData(metricsForDay)
-				const activityData = await this.getActivityData(metricsForDay)
-				const readinessData = await this.getReadinessData(metricsForDay)
+
+				const ouraApi = new OuraApi(this.settings.personalAccessToken)
+				const sleepData = await ouraApi.getSleepData(metricsForDay)
+				const activityData = await ouraApi.getActivityData(metricsForDay)
+				const readinessData = await ouraApi.getReadinessData(metricsForDay)
 
 				const sleepEntry = sleepData.sleep[0]
 				const activityEntry = activityData.activity[0]
@@ -322,7 +159,8 @@ class OuraSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		if (this.plugin.settings.personalAccessToken) {
-			const userInfo = await this.plugin.getUserInfo()
+			const ouraApi = new OuraApi(this.plugin.settings.personalAccessToken)
+			const userInfo = await ouraApi.getUserInfo()
 			containerEl.createEl('p', {text: `email: ${userInfo.email}`})
 		}
 

@@ -1,7 +1,7 @@
 {
   "name": "obsidian-oura-plugin",
   "version": "0.0.1",
-  "description": "A plugin for importing obsidian data into a note",
+  "description": "A plugin for importing oura ring data into a note",
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
