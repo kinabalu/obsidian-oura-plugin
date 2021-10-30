@@ -47,8 +47,6 @@ export default class OuraPlugin extends Plugin {
 
 		await this.loadSettings();
 
-		this.addStatusBarItem().setText('Oura Ring');
-
 		this.addCommand({
 			id: 'insert-oura-ring-stats',
 			name: 'Insert Oura Ring Stats',
