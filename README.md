@@ -24,6 +24,12 @@ Two methods and the first one is easier:
   `main.js`, `manifest.json`, and the `styles.css` files from the
   [latest release](https://github.com/kinabalu/obsidian-oura-plugin/releases) to the folder.
 
+### Usage
+
+Open the command pallette (Ctrl+P or Cmd+P) and type `Oura Ring`. Execute the 
+`Oura Ring: Insert Oura Ring Stats` action and your data will be written to your 
+current cursor location.
+
 ## Say Thanks 🙏
 
 If you like this plugin and would like to buy me a coffee, you can!
