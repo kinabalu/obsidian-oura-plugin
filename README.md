@@ -26,7 +26,7 @@ Two methods and the first one is easier:
 
 ### Usage
 
-Open the command pallette (Ctrl+P or Cmd+P) and type `Oura Ring`. Execute the 
+Open the command palette (⌃+P or ⌘+P) and type `Oura Ring`. Execute the 
 `Oura Ring: Insert Oura Ring Stats` action and your data will be written to your 
 current cursor location.
 
