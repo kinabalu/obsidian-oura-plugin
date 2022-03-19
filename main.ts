@@ -1,4 +1,4 @@
-import {App, Editor, Plugin, PluginSettingTab, Setting, MarkdownView} from 'obsidian';
+import {App, Editor, Notice, Plugin, PluginSettingTab, Setting, MarkdownView} from 'obsidian';
 import type moment from "moment"
 import numeral from 'numeral'
 import OuraApi from "./oura-api";
@@ -13,6 +13,106 @@ interface OuraPluginSettings {
 	personalAccessToken: string;
 }
 
+interface OuraRingStats {
+	hasSleepData?: boolean;
+	hasActivityData?: boolean;
+	hasReadinessData?: boolean;
+	bedtimeStart?: string;
+	bedtimeEnd?: string;
+	sleepScore?: number;
+	sleepEfficiency?: number;
+	sleepDuration?: string;
+	sleepTotal?: string;
+	sleepLatency?: string;
+	sleepAwake?: string;
+	sleepLight?: string;
+	sleepRem?: string;
+	sleepDeep?: string;
+	activityDayStart?: string;
+	activityDayEnd?: string;
+	activityScore?: number;
+	activityLow?: string;
+	activityMedium?: string;
+	activityHigh?: string;
+	activityRest?: string;
+	activitySteps?: number;
+	readinessScore?: number;
+}
+
+const getToday = () => {
+	return window.moment().format('YYYY-MM-DD')
+}
+
+const iso8601ToTime = (theString: string): string => {
+	return window.moment(theString).format('HH:mm:ss')
+}
+
+const minutesToHMS = (minutes: number): string => {
+	const hours = Math.floor(minutes / 60)
+	const minutesRemainder = minutes % 60
+
+	return `${numeral(hours).format('00')}:${numeral(minutesRemainder).format('00')}:00`
+}
+
+const secondsToHMS = (seconds: number): string => {
+	const hours = Math.floor(seconds / 60 / 60)
+	const minutes = Math.floor(seconds / 60) % 60
+	const secondsRemainder = (seconds % 60)
+	return `${numeral(hours).format('00')}:${numeral(minutes).format('00')}:${numeral(secondsRemainder).format('00')}`
+}
+
+
+const fetchOuraStats = async (token: string, day: string): Promise<OuraRingStats> => {
+	const ouraRingStats : OuraRingStats = {
+		hasSleepData: false,
+		hasActivityData: false,
+		hasReadinessData: false,
+	}
+
+	const ouraApi = new OuraApi(token)
+	const sleepData = await ouraApi.getSleepData(day)
+	const activityData = await ouraApi.getActivityData(day)
+	const readinessData = await ouraApi.getReadinessData(day)
+
+	const sleepEntry = sleepData.sleep[0]
+	const activityEntry = activityData.activity[0]
+	const readinessEntry = readinessData.readiness[0]
+
+	if (sleepEntry) {
+		ouraRingStats.hasSleepData = true
+		ouraRingStats.bedtimeStart = iso8601ToTime(sleepEntry.bedtime_start)
+		ouraRingStats.bedtimeEnd = iso8601ToTime(sleepEntry.bedtime_end)
+		ouraRingStats.sleepScore = sleepEntry.score
+		ouraRingStats.sleepEfficiency = sleepEntry.efficiency
+		ouraRingStats.sleepDuration = secondsToHMS(sleepEntry.duration)
+		ouraRingStats.sleepTotal = secondsToHMS(sleepEntry.total)
+		ouraRingStats.sleepAwake = secondsToHMS(sleepEntry.awake)
+		ouraRingStats.sleepLatency = secondsToHMS(sleepEntry.onset_latency)
+		ouraRingStats.sleepLight = secondsToHMS(sleepEntry.light)
+		ouraRingStats.sleepRem = secondsToHMS(sleepEntry.rem)
+		ouraRingStats.sleepDeep = secondsToHMS(sleepEntry.deep)
+	}
+
+	if (activityEntry) {
+		ouraRingStats.hasActivityData = true
+		ouraRingStats.activityDayStart = iso8601ToTime(activityEntry.day_start)
+		ouraRingStats.activityDayEnd = iso8601ToTime(activityEntry.day_end)
+		ouraRingStats.activityScore = activityEntry.score
+		ouraRingStats.activityLow = secondsToHMS(activityEntry.low)
+		ouraRingStats.activityMedium = secondsToHMS(activityEntry.medium)
+		ouraRingStats.activityHigh = secondsToHMS(activityEntry.high)
+		ouraRingStats.activityRest = secondsToHMS(activityEntry.rest)
+		ouraRingStats.activitySteps = activityEntry.steps
+	}
+
+	if (readinessEntry) {
+		ouraRingStats.hasReadinessData = true
+		ouraRingStats.readinessScore = readinessEntry.score
+	}
+
+	return ouraRingStats
+}
+
 const DEFAULT_SETTINGS: OuraPluginSettings = {
 	personalAccessToken: null
 }
@@ -24,26 +124,8 @@ export default class OuraPlugin extends Plugin {
 		return window.moment().format('YYYY-MM-DD')
 	}
 
-	iso8601ToTime(theString: string): string {
-		return window.moment(theString).format('HH:mm:ss')
-	}
-
-	minutesToHMS(minutes: number): string {
-		const hours = Math.floor(minutes / 60)
-		const minutesRemainder = minutes % 60
-
-		return `${numeral(hours).format('00')}:${numeral(minutesRemainder).format('00')}:00`
-	}
-
-	secondsToHMS(seconds: number): string {
-		const hours = Math.floor(seconds / 60 / 60)
-		const minutes = Math.floor(seconds / 60) % 60
-		const secondsRemainder = (seconds % 60)
-		return `${numeral(hours).format('00')}:${numeral(minutes).format('00')}:${numeral(secondsRemainder).format('00')}`
-	}
-
 	async onload() {
-		console.log('loading plugin');
+		console.log('Loading Oura Ring plugin');
 
 		await this.loadSettings();
 
@@ -51,75 +133,71 @@ export default class OuraPlugin extends Plugin {
 			id: 'insert-oura-ring-stats',
 			name: 'Insert Oura Ring Stats',
 			editorCallback: async (editor: Editor) => {
+				if (!this.settings.personalAccessToken) {
+					new Notice('Personal access token missing, please enter in plugin settings')
+					return
+				}
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 
 				const activeDocument = activeView.file.basename
 
 				const metricsForDay = window.moment(activeDocument, 'YYYY-MM-DD', true).isValid() ? activeDocument : this.getToday()
 
-				console.log(`Grabbing Oura sleep / activity metrics for ${metricsForDay}`)
 
-				const ouraApi = new OuraApi(this.settings.personalAccessToken)
-				const sleepData = await ouraApi.getSleepData(metricsForDay)
-				const activityData = await ouraApi.getActivityData(metricsForDay)
-				const readinessData = await ouraApi.getReadinessData(metricsForDay)
-
-				const sleepEntry = sleepData.sleep[0]
-				const activityEntry = activityData.activity[0]
-				const readinessEntry = readinessData.readiness[0]
+				const stats : OuraRingStats = await fetchOuraStats(this.settings.personalAccessToken, metricsForDay)
 
 				let sleepOutput = ''
 
-				if (sleepEntry) {
-					sleepOutput += `- Bedtime Start: ${this.iso8601ToTime(sleepEntry.bedtime_start)}`
+				if (stats.hasSleepData) {
+					sleepOutput += `- Bedtime_Start:: ${stats.bedtimeStart}`
 					sleepOutput += '\n'
-					sleepOutput += `- Bedtime End: ${this.iso8601ToTime(sleepEntry.bedtime_end)}`
+					sleepOutput += `- Bedtime_End:: ${stats.bedtimeStart}`
 					sleepOutput += '\n'
-					sleepOutput += `- Sleep Score: ${sleepEntry.score}`
+					sleepOutput += `- Sleep_Score:: ${stats.sleepScore}`
 					sleepOutput += '\n'
-					sleepOutput += `- Sleep Efficiency: ${sleepEntry.efficiency}`
+					sleepOutput += `- Sleep_Efficiency:: ${stats.sleepEfficiency}`
 					sleepOutput += '\n'
-					sleepOutput += `- Sleep Duration: ${this.secondsToHMS(sleepEntry.duration)}`
+					sleepOutput += `- Sleep_Duration:: ${stats.sleepDuration}`
 					sleepOutput += '\n'
-					sleepOutput += `- Total Sleep: ${this.secondsToHMS(sleepEntry.total)}`
+					sleepOutput += `- Total_Sleep:: ${stats.sleepTotal}`
 					sleepOutput += '\n'
-					sleepOutput += `- Total Awake: ${this.secondsToHMS(sleepEntry.awake)}`
+					sleepOutput += `- Total_Awake:: ${stats.sleepAwake}`
 					sleepOutput += '\n'
-					sleepOutput += `- Sleep Latency: ${this.secondsToHMS(sleepEntry.onset_latency)}`
+					sleepOutput += `- Sleep_Latency:: ${stats.sleepLatency}`
 					sleepOutput += '\n'
-					sleepOutput += `- Light Sleep: ${this.secondsToHMS(sleepEntry.light)}`
+					sleepOutput += `- Light_Sleep:: ${stats.sleepLight}`
 					sleepOutput += '\n'
-					sleepOutput += `- Rem Sleep: ${this.secondsToHMS(sleepEntry.rem)}`
+					sleepOutput += `- Rem_Sleep:: ${stats.sleepRem}`
 					sleepOutput += '\n'
-					sleepOutput += `- Deep Sleep: ${this.secondsToHMS(sleepEntry.deep)}`
+					sleepOutput += `- Deep_Sleep:: ${stats.sleepDeep}`
 				}
 
-				if (activityEntry) {
-					if (sleepEntry) {
+				if (stats.hasActivityData) {
+					if (stats.hasSleepData) {
 						sleepOutput += '\n'
 					}
-					sleepOutput += `- Day Start: ${this.iso8601ToTime(activityEntry.day_start)}`
+					sleepOutput += `- Day_Start:: ${stats.activityDayStart}`
 					sleepOutput += '\n'
-					sleepOutput += `- Day End: ${this.iso8601ToTime(activityEntry.day_end)}`
+					sleepOutput += `- Day_End:: ${stats.activityDayEnd}`
 					sleepOutput += '\n'
-					sleepOutput += `- Activity Score: ${activityEntry.score}`
+					sleepOutput += `- Activity_Score:: ${stats.activityScore}`
 					sleepOutput += '\n'
-					sleepOutput += `- Low Activity: ${this.minutesToHMS(activityEntry.low)}`
+					sleepOutput += `- Low_Activity:: ${stats.activityLow}`
 					sleepOutput += '\n'
-					sleepOutput += `- Medium Activity: ${this.minutesToHMS(activityEntry.medium)}`
+					sleepOutput += `- Medium_Activity:: ${stats.activityMedium}`
 					sleepOutput += '\n'
-					sleepOutput += `- High Activity: ${this.minutesToHMS(activityEntry.high)}`
+					sleepOutput += `- High_Activity:: ${stats.activityHigh}`
 					sleepOutput += '\n'
-					sleepOutput += `- Rest Activity: ${this.minutesToHMS(activityEntry.rest)}`
+					sleepOutput += `- Rest_Activity:: ${stats.activityRest}`
 					sleepOutput += '\n'
-					sleepOutput += `- Steps: ${activityEntry.steps}`
+					sleepOutput += `- Steps:: ${stats.activitySteps}`
 				}
 
-				if (readinessEntry) {
-					if (sleepEntry || activityEntry) {
+				if (stats.hasReadinessData) {
+					if (stats.hasSleepData || stats.hasActivityData) {
 						sleepOutput += '\n'
 					}
-					sleepOutput += `- Readiness Score: ${readinessEntry.score}`
+					sleepOutput += `- Readiness_Score:: ${stats.readinessScore}`
 				}
 
 				editor.replaceSelection(sleepOutput)
@@ -131,7 +209,7 @@ export default class OuraPlugin extends Plugin {
 	}
 
 	onunload() {
-		console.log('unloading plugin');
+		console.log('unloading Oura Ring plugin');
 	}
 
 	async loadSettings() {
