@@ -74,9 +74,9 @@ const fetchOuraStats = async (token: string, day: string): Promise<OuraRingStats
 	const activityData = await ouraApi.getActivityData(day)
 	const readinessData = await ouraApi.getReadinessData(day)
 
-	const sleepEntry = sleepData.sleep[0]
-	const activityEntry = activityData.activity[0]
-	const readinessEntry = readinessData.readiness[0]
+	const sleepEntry = sleepData.data[0]
+	const activityEntry = activityData.data[0]
+	const readinessEntry = readinessData.data[0]
 
 	if (sleepEntry) {
 		ouraRingStats.hasSleepData = true

@@ -1,7 +1,7 @@
 import {request} from "obsidian";
 import {OuraActivityEntries, OuraReadinessEntries, OuraSleepEntries, OuraUserInfo} from "./types";
 
-const OURA_API_URL = 'https://api.ouraring.com/v1'
+const OURA_API_URL = 'https://api.ouraring.com/v2/usercollection'
 
 export default class OuraApi {
     token!: string
@@ -14,10 +14,10 @@ export default class OuraApi {
         if (this.token) {
             const params = new URLSearchParams()
             const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
-            params.set('start', start)
-            params.set('end', theDate)
+            params.set('start_date', start)
+            params.set('end_date', theDate)
             const data = await request({
-                url: `${OURA_API_URL}/sleep?${params.toString()}`, headers: {
+                url: `${OURA_API_URL}/daily_sleep?${params.toString()}`, headers: {
                     'Authorization': `Bearer ${this.token}`
                 }
             })
@@ -31,10 +31,10 @@ export default class OuraApi {
         if (this.token) {
             const params = new URLSearchParams()
             const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
-            params.set('start', start)
-            params.set('end', theDate)
+            params.set('start_date', start)
+            params.set('end_date', theDate)
             const data = await request({
-                url: `${OURA_API_URL}/activity?${params.toString()}`, headers: {
+                url: `${OURA_API_URL}/daily_activity?${params.toString()}`, headers: {
                     'Authorization': `Bearer ${this.token}`
                 }
             })
@@ -48,10 +48,10 @@ export default class OuraApi {
         if (this.token) {
             const params = new URLSearchParams()
             const start = window.moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
-            params.set('start', start)
-            params.set('end', theDate)
+            params.set('start_date', start)
+            params.set('end_date', theDate)
             const data = await request({
-                url: `${OURA_API_URL}/readiness?${params.toString()}`, headers: {
+                url: `${OURA_API_URL}/daily_readiness?${params.toString()}`, headers: {
                     'Authorization': `Bearer ${this.token}`
                 }
             })
@@ -64,7 +64,7 @@ export default class OuraApi {
     async getUserInfo(): Promise<OuraUserInfo> {
         if (this.token) {
             const data = await request({
-                url: `${OURA_API_URL}/userinfo`, headers: {
+                url: `${OURA_API_URL}/personal_info`, headers: {
                     'Authorization': `Bearer ${this.token}`
                 }
             })
