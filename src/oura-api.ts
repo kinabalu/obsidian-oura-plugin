@@ -4,7 +4,7 @@ import {OuraActivityEntries, OuraReadinessEntries, OuraSleepEntries, OuraUserInf
 const OURA_API_URL = 'https://api.ouraring.com/v2/usercollection'
 
 export default class OuraApi {
-    token!: string
+    token: string | null
 
     constructor(token: string) {
         this.token = token

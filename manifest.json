@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-oura-plugin",
 	"name": "Oura Ring",
-	"version": "0.0.3",
+	"version": "0.2.0",
 	"minAppVersion": "0.9.12",
 	"description": "Oura Ring",
 	"author": "Andrew Lombardi",
