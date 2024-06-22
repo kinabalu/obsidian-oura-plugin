@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-oura-plugin",
 	"name": "Oura Ring",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"minAppVersion": "1.5.12",
 	"description": "A plugin for importing Oura Ring data from the Cloud-based API",
 	"author": "Andrew Lombardi",
