@@ -1,6 +1,3 @@
-# HELP WANTED to fix API connection
-Currently the connection to Oura's API is not working properly and I no longer have a working ring (battery died on two of 'em). Please reach out if you can help
-
 ## Oura Ring Plugin for Obsidian
 Add your oura ring stats to an Obsidian note for any dates. The documentation for the Oura Ring
 API is available at [API Documentation](https://cloud.ouraring.com/docs).
