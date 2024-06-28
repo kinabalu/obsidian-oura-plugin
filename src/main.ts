@@ -88,7 +88,8 @@ const fetchOuraStats = async (token: string, day: string): Promise<OuraRingStats
 
 const DEFAULT_SETTINGS: OuraPluginSettings = {
 	personalAccessToken: null,
-	sleepTemplate: `Sleep Day: $$sleep_day
+	sleepTemplate: `
+Sleep Day: $$sleep_day
 Sleep Score: $$sleep_score
 Sleep Timestamp: $$sleep_timestamp
 Deep Sleep: $$sleep_contributors_deep_sleep
@@ -97,8 +98,10 @@ Latency: $$sleep_contributors_latency
 REM Sleep: $$sleep_contributors_rem_sleep
 Restfulness: $$sleep_contributors_restfulness
 Timing: $$sleep_contributors_timing
-Total Sleep: $$sleep_contributors_total_sleep`,
-	readinessTemplate: `Readiness Day: $$readiness_day
+Total Sleep: $$sleep_contributors_total_sleep
+`,
+	readinessTemplate: `
+Readiness Day: $$readiness_day
 Readiness Score: $$readiness_score
 Temperature Deviation: $$readiness_temperature_deviation
 Temperature Trend Deviation: $$readiness_temperature_trend_deviation
@@ -112,7 +115,8 @@ Recovery Index: $$readiness_contributors_recovery_index
 Resting Heart Rate: $$readiness_contributors_resting_heart_rate
 Sleep Balance: $$readiness_contributors_sleep_balance
 `,
-	activitiesTemplate: `Class (5 min): $$activities_class_5_min
+	activitiesTemplate: `
+Class (5 min): $$activities_class_5_min
 Score: $$activities_score
 Active Calories: $$activities_active_calories
 Average MET Minutes: $$activities_average_met_minutes
@@ -143,7 +147,8 @@ Move Every Hour: $$activities_contributors_move_every_hour
 Recovery Time: $$activities_contributors_recovery_time
 Stay Active: $$activities_contributors_stay_active
 Training Frequency: $$activities_contributors_training_frequency
-Training Volume: $$activities_contributors_training_volume`,
+Training Volume: $$activities_contributors_training_volume
+`,
 }
 
 function replacePlaceholders(template: string, data: OuraRingStats) {
