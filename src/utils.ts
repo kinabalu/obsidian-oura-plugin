@@ -19,3 +19,10 @@ export const secondsToHMS = (seconds: number): string => {
   const secondsRemainder = (seconds % 60)
   return `${numeral(hours).format('00')}:${numeral(minutes).format('00')}:${numeral(secondsRemainder).format('00')}`
 }
+
+export function autoResizeTextArea(textarea: HTMLTextAreaElement): void {
+  requestAnimationFrame(() => {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  });
+}

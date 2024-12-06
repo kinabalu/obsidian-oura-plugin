@@ -1,6 +1,7 @@
 import {App, Notice, PluginSettingTab, Setting} from "obsidian";
 import OuraApi from "./oura-api";
 import OuraPlugin from "./main";
+import {autoResizeTextArea} from "./utils";
 
 export class OuraSettingTab extends PluginSettingTab {
   plugin: OuraPlugin;
@@ -73,29 +74,81 @@ export class OuraSettingTab extends PluginSettingTab {
         )
       new Setting(containerEl)
         .setName("Sleep Template")
-        .addTextArea(textArea => textArea
-          .setValue(this.plugin.settings.sleepTemplate)
-          .onChange(async (value: string) => {
-            this.plugin.settings.sleepTemplate = value
-            await this.plugin.saveSettings()
-          }))
+        .setDesc('Template for the sleep data.')
+          .addTextArea((text) => {
+            text
+                .setValue(this.plugin.settings.sleepTemplate)
+                .onChange(async (value: string) => {
+                    this.plugin.settings.sleepTemplate = value
+                    await this.plugin.saveSettings()
+                });
+            // Add autoresize to the textarea
+            text.inputEl.classList.add('autoresize');
+            autoResizeTextArea(text.inputEl);
+            text.inputEl.addEventListener('input', () => autoResizeTextArea(text.inputEl));
+            containerEl.appendChild(text.inputEl);
+        })
+
       new Setting(containerEl)
         .setName("Activities Template")
-        .addTextArea(textArea => textArea
-          .setValue(this.plugin.settings.activitiesTemplate)
-          .onChange(async (value: string) => {
-            this.plugin.settings.activitiesTemplate = value
-            await this.plugin.saveSettings()
-          }))
+        .setDesc('Template for the activities data.')
+        .addTextArea((text) => {
+            text
+                .setValue(this.plugin.settings.activitiesTemplate)
+                .onChange(async (value: string) => {
+                    this.plugin.settings.activitiesTemplate = value
+                    await this.plugin.saveSettings()
+                });
+            // Add autoresize to the textarea
+            text.inputEl.classList.add('autoresize');
+            autoResizeTextArea(text.inputEl);
+            text.inputEl.addEventListener('input', () => autoResizeTextArea(text.inputEl));
+            containerEl.appendChild(text.inputEl);
+        })
+
       new Setting(containerEl)
         .setName("Readiness Template")
-        .addTextArea(textArea => textArea
-          .setValue(this.plugin.settings.readinessTemplate)
-          .onChange(async (value: string) => {
-            this.plugin.settings.readinessTemplate = value
-            await this.plugin.saveSettings()
-          }))
+        .setDesc('Template for the readiness data.')
+        .addTextArea((text) => {
+            text
+              .setValue(this.plugin.settings.readinessTemplate)
+              .onChange(async (value: string) => {
+                this.plugin.settings.readinessTemplate = value
+                await this.plugin.saveSettings()
+              });
+            // Add autoresize to the textarea
+            text.inputEl.classList.add('autoresize');
+            autoResizeTextArea(text.inputEl);
+            text.inputEl.addEventListener('input', () => autoResizeTextArea(text.inputEl));
+            containerEl.appendChild(text.inputEl);
+        })
     }
 
   }
 }
+
+
+/*
+
+
+    new Setting(containerEl)
+      .setName('Frontmatter Template')
+      .setDesc(
+        'Frontmatter / properties template for notes. recording_id and the three dashes before and after properties automatically added'
+      )
+      .addTextArea((text) => {
+        text
+          .setPlaceholder(this.plugin.settings.frontmatterTemplate)
+          .setValue(this.plugin.settings.frontmatterTemplate)
+          .onChange(async (value) => {
+            this.plugin.settings.frontmatterTemplate = value;
+            await this.plugin.saveSettings();
+          });
+        // Add autoresize to the textarea
+        text.inputEl.classList.add('autoresize');
+        autoResizeTextArea(text.inputEl);
+        text.inputEl.addEventListener('input', () => autoResizeTextArea(text.inputEl));
+        containerEl.appendChild(text.inputEl);
+      })
+
+ */
