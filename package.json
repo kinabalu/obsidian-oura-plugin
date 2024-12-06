@@ -1,6 +1,6 @@
 {
   "name": "obsidian-oura-plugin",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A plugin for importing oura ring data into a note",
   "main": "main.js",
   "scripts": {
