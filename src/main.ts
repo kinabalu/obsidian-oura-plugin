@@ -5,14 +5,12 @@ import {OuraSettingTab} from "./settings";
 import {getToday} from "./utils";
 
 
-const fetchOuraStats = async (token: string, day: string): Promise<OuraRingStats> => {
-	const ouraRingStats : OuraRingStats = {
-	}
+const fetchOuraStats = async (api: OuraApi, day: string): Promise<OuraRingStats> => {
+	const ouraRingStats : OuraRingStats = {}
 
-	const ouraApi = new OuraApi(token)
-	const sleepData = await ouraApi.getSleepData(day)
-	const readinessData = await ouraApi.getReadinessData(day)
-	const activityData = await ouraApi.getActivityData(day)
+	const sleepData = await api.getSleepData(day)
+	const readinessData = await api.getReadinessData(day)
+	const activityData = await api.getActivityData(day)
 
 	if (sleepData && sleepData.data.length > 0) {
 		const sleepEntry = sleepData.data[0] as SleepEntry;
@@ -155,12 +153,17 @@ function replacePlaceholders(template: string, data: OuraRingStats) {
 }
 
 export default class OuraPlugin extends Plugin {
+	public ouraApi: OuraApi;
 	settings: OuraPluginSettings;
 
 	async onload() {
 		console.log('Loading Oura Ring plugin');
 
 		await this.loadSettings();
+
+		if (!this.ouraApi) {
+			this.ouraApi = new OuraApi(this.settings.personalAccessToken);
+		}
 
 		this.addCommand({
 			id: 'insert-oura-ring-stats',
@@ -174,7 +177,7 @@ export default class OuraPlugin extends Plugin {
 				const activeDocument = activeView.file.basename
 				const metricsForDay = moment(activeDocument, 'YYYY-MM-DD', true).isValid() ? activeDocument : getToday()
 
-				const stats : OuraRingStats = await fetchOuraStats(this.settings.personalAccessToken, metricsForDay)
+				const stats : OuraRingStats = await fetchOuraStats(this.ouraApi, metricsForDay)
 
 				let ouraText = ''
 
