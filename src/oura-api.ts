@@ -16,7 +16,7 @@ export default class OuraApi {
         this.token = token
     }
 
-    async getSleepData(theDate: string): Promise<OuraResponse | null> {
+    public async getSleepData(theDate: string): Promise<OuraResponse | null> {
         if (this.token) {
             try {
                 const params = new URLSearchParams()
@@ -57,7 +57,7 @@ export default class OuraApi {
         return null
     }
 
-    async getActivityData(theDate: string): Promise<OuraResponse | null> {
+    public async getActivityData(theDate: string): Promise<OuraResponse | null> {
         if (this.token) {
             try {
                 const params = new URLSearchParams()
@@ -121,7 +121,7 @@ export default class OuraApi {
         return null
     }
 
-    async getReadinessData(theDate: string): Promise<OuraResponse | null> {
+    public async getReadinessData(theDate: string): Promise<OuraResponse | null> {
         if (this.token) {
             try {
                 const params = new URLSearchParams()
@@ -164,7 +164,7 @@ export default class OuraApi {
         return null
     }
 
-    async getUserInfo(): Promise<OuraUserInfo> {
+    public async getUserInfo(): Promise<OuraUserInfo> {
         if (this.token) {
             try {
                 const data = await requestUrl({
