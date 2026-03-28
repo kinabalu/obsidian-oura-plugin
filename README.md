@@ -13,11 +13,32 @@ and copy the token into the settings for this plugin
 
 #### Sleep
 
+| Name                   | Field                                 | Example      |
+|------------------------|---------------------------------------|--------------|
+| Sleep Day              | sleep_day                             | 2024-03-21   |
+| Sleep Score            | sleep_score                           | 86           |
+| Sleep Timestamp        | sleep_timestamp                       |              |
+| Total Sleep Duration   | sleep_total_sleep_duration            | 06:50        |
+| Deep Sleep Duration    | sleep_deep_sleep_duration             | 01:23        |
+| Light Sleep Duration   | sleep_light_sleep_duration            | 03:15        |
+| REM Sleep Duration     | sleep_rem_sleep_duration              | 02:12        |
+| Awake Time             | sleep_awake_time                      | 00:35        |
+| Time in Bed            | sleep_time_in_bed                     | 07:25        |
+| Bedtime Start          | sleep_bedtime_start                   | 23:15:00     |
+| Bedtime End            | sleep_bedtime_end                     | 06:40:00     |
+| Sleep Efficiency       | sleep_efficiency                      | 92           |
+| Sleep Latency          | sleep_latency                         | 300          |
+| Avg Heart Rate         | sleep_average_heart_rate              | 58           |
+| Avg HRV                | sleep_average_hrv                     | 42           |
+| Lowest Heart Rate      | sleep_lowest_heart_rate               | 51           |
+| Avg Breath Rate        | sleep_average_breath                  | 15.2         |
+
+##### Sleep Contributor Scores
+
+These are Oura's contributor scores (0-100), not actual durations.
+
 | Name                   | Field                                 |
 |------------------------|---------------------------------------|
-| Sleep Day              | sleep_day                             |
-| Sleep Score            | sleep_score                           |
-| Sleep Timestamp        | sleep_timestamp                       |
 | Deep Sleep             | sleep_contributors_deep_sleep         |
 | Efficiency             | sleep_contributors_efficiency         |
 | Latency                | sleep_contributors_latency            |

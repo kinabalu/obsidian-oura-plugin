@@ -12,6 +12,7 @@ export interface OuraPluginSettings {
   sleepTemplate: string;
   readinessTemplate: string;
   activitiesTemplate: string;
+  autoInsert: boolean;
 }
 
 export interface OuraResponse {
@@ -152,6 +153,21 @@ export interface OuraRingStats {
   sleep_contributors_restfulness?: number;
   sleep_contributors_timing?: number;
   sleep_contributors_total_sleep?: number;
+
+  sleep_total_sleep_duration?: string;
+  sleep_deep_sleep_duration?: string;
+  sleep_light_sleep_duration?: string;
+  sleep_rem_sleep_duration?: string;
+  sleep_awake_time?: string;
+  sleep_time_in_bed?: string;
+  sleep_bedtime_start?: string;
+  sleep_bedtime_end?: string;
+  sleep_efficiency?: number;
+  sleep_latency?: number;
+  sleep_average_heart_rate?: number;
+  sleep_average_hrv?: number;
+  sleep_lowest_heart_rate?: number;
+  sleep_average_breath?: number;
 
   activities_class_5_min?: string;
   activities_score?: number;

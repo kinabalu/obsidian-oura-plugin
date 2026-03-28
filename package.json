@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "rollup --config rollup.config.js --bundleConfigAsCjs -w",
     "build": "rollup --config rollup.config.js --bundleConfigAsCjs --environment BUILD:production",
+    "deploy": "npm run build && node deploy.mjs",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
   "keywords": [],

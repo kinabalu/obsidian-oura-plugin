@@ -22,8 +22,9 @@ export default class OuraApi {
         if (this.token) {
             try {
                 const params = new URLSearchParams()
+                const start = moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
                 const end = moment(theDate).add(1, 'days').format('YYYY-MM-DD')
-                params.set('start_date', theDate)
+                params.set('start_date', start)
                 params.set('end_date', end)
                 const data = await requestUrl({
                     url: `${OURA_API_URL}/daily_sleep?${params.toString()}`, headers: {
@@ -64,8 +65,9 @@ export default class OuraApi {
             try {
                 const params = new URLSearchParams()
                 const start = moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
+                const end = moment(theDate).add(1, 'days').format('YYYY-MM-DD')
                 params.set('start_date', start)
-                params.set('end_date', theDate)
+                params.set('end_date', end)
                 const data = await requestUrl({
                     url: `${OURA_API_URL}/sleep?${params.toString()}`, headers: {
                         'Authorization': `Bearer ${this.token}`
@@ -83,16 +85,16 @@ export default class OuraApi {
                     day: entry.day,
                     deep_sleep_duration: entry.deep_sleep_duration,
                     efficiency: entry.efficiency,
-                    heart_rate: {
+                    heart_rate: entry.heart_rate ? {
                         interval: entry.heart_rate.interval,
                         items: entry.heart_rate.items,
                         timestamp: entry.heart_rate.timestamp,
-                    },
-                    hrv: {
+                    } : null,
+                    hrv: entry.hrv ? {
                         interval: entry.hrv.interval,
                         items: entry.hrv.items,
                         timestamp: entry.hrv.timestamp,
-                    },
+                    } : null,
                     latency: entry.latency,
                     light_sleep_duration: entry.light_sleep_duration,
                     low_battery_alert: entry.low_battery_alert,
@@ -143,8 +145,9 @@ export default class OuraApi {
             try {
                 const params = new URLSearchParams()
                 const start = moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
+                const end = moment(theDate).add(1, 'days').format('YYYY-MM-DD')
                 params.set('start_date', start)
-                params.set('end_date', theDate)
+                params.set('end_date', end)
                 const data = await requestUrl({
                     url: `${OURA_API_URL}/daily_activity?${params.toString()}`, headers: {
                         'Authorization': `Bearer ${this.token}`
@@ -207,8 +210,9 @@ export default class OuraApi {
             try {
                 const params = new URLSearchParams()
                 const start = moment(theDate).subtract(1, 'days').format('YYYY-MM-DD')
+                const end = moment(theDate).add(1, 'days').format('YYYY-MM-DD')
                 params.set('start_date', start)
-                params.set('end_date', theDate)
+                params.set('end_date', end)
                 const data = await requestUrl({
                     url: `${OURA_API_URL}/daily_readiness?${params.toString()}`, headers: {
                         'Authorization': `Bearer ${this.token}`
