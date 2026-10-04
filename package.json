@@ -1,6 +1,6 @@
 {
   "name": "obsidian-oura-plugin",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "A plugin for importing oura ring data into a note",
   "main": "main.js",
   "scripts": {
@@ -15,15 +15,13 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@codemirror/state": "^6.7.5",
-    "@codemirror/view": "^6.43.12",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/moment": "2.13.0",
     "@types/node": "^20.12.10",
     "@types/numeral": "^2.0.5",
-    "obsidian": "^1.5.7-1",
+    "obsidian": "1.11.4",
     "rollup": "^4.17.2",
     "tslib": "^2.6.2",
     "typescript": "^5.4.5"
