@@ -40,7 +40,7 @@ test('upgrade preserves personal token and templates without rewriting settings'
 
 test('an authentication failure does not mutate the note', async () => {
   const {plugin, notices} = pluginFixture({oauthTokens: {accessToken: 'test'}});
-  await plugin.onload();
+  await plugin.initialize();
   let mutations = 0;
   await plugin.command.editorCallback({replaceSelection() { mutations++; }});
   assert.equal(mutations, 0);
@@ -50,7 +50,7 @@ test('an authentication failure does not mutate the note', async () => {
 
 test('legacy users see migration notice and imports are allowed to reach the API', async () => {
   const {plugin, notices} = pluginFixture({personalAccessToken: 'legacy'});
-  await plugin.onload();
+  await plugin.initialize();
   await plugin.command.editorCallback({replaceSelection() { assert.fail('must not mutate on API failure'); }});
   assert.match(notices[0], /Please migrate to OAuth/);
   assert.equal(notices[1], 'Reconnect to Oura');

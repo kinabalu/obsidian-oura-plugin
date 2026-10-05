@@ -1,10 +1,13 @@
-# Oura Ring 0.2.7
+# Oura Ring 0.2.8
 
-- Adds OAuth sign-in using your own Oura application's client ID and secret, requesting only daily data access.
-- Refreshes access tokens automatically and reports authentication failures before modifying notes.
-- Preserves existing personal access tokens until OAuth connects successfully or you disconnect.
-- Adds callback validation, manual sign-in completion, and safe handling of single-use refresh tokens.
+- Renames the command to "Insert daily stats" (the command ID is unchanged, so existing hotkeys keep working).
+- Rewrites the plugin description for the community plugin directory.
+- Uses Obsidian setting headings for the Connection and Templates sections.
+- Plugin setup no longer blocks Obsidian startup, and the startup console message is removed.
+- Textarea resizing uses popout-window-safe APIs.
+- Release assets are limited to main.js, manifest.json, and styles.css, with GitHub build provenance attestations.
+- Updates development tooling dependencies flagged by npm audit; no runtime dependency changes.
 
-See the README for OAuth setup. Credentials and tokens are stored unencrypted in the vault's plugin data.json; keep this file private and avoid syncing it between devices.
+Minimum Obsidian version is unchanged at 1.5.12.
 
-Validation: automated authentication tests, TypeScript checks, and the production build. Live Oura acceptance of the obsidian:// callback, browser handoff, mobile behavior, and rendered settings have not yet been verified. A manual HTTPS callback option is available.
+Validation: automated authentication tests, TypeScript checks, the production build, version consistency, and a security review of the authentication code with no findings. Live Oura sign-in, browser handoff, mobile behavior, and rendered settings have not yet been verified.

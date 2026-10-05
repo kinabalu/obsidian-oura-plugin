@@ -162,9 +162,14 @@ export default class OuraPlugin extends Plugin {
 	oauth: OuraOAuth;
 	private settingsTab: OuraSettingTab;
 
-	async onload() {
-		console.log('Loading Oura Ring plugin');
+	onload(): void {
+		void this.initialize();
+	}
 
+	/**
+	 * Loads settings, then registers the OAuth callback, command, and settings tab that depend on them.
+	 */
+	private async initialize(): Promise<void> {
 		await this.loadSettings();
 		if (this.settings.personalAccessToken && !this.settings.oauthTokens) {
 			new Notice('Oura is using a legacy personal access token. Please migrate to OAuth in the plugin settings.');
@@ -184,7 +189,7 @@ export default class OuraPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'insert-oura-ring-stats',
-			name: 'Insert Oura Ring Stats',
+			name: 'Insert daily stats',
 			editorCallback: async (editor: Editor) => {
 				if (!this.settings.oauthTokens && !this.settings.personalAccessToken) {
 					new Notice('Connect to Oura in the plugin settings first.')
