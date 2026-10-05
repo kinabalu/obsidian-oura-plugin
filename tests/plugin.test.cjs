@@ -4,11 +4,13 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
 
-function pluginFixture(saved) {
+const settle = () => new Promise(resolve => setImmediate(resolve));
+
+function pluginFixture(saved, loadData = async () => saved) {
   const notices = [];
   class Plugin {
     app = {workspace: {getActiveViewOfType: () => ({file: {basename: '2026-09-17'}})}};
-    async loadData() { return saved; }
+    loadData() { return loadData(); }
     async saveData(data) { this.saved = data; }
     addCommand(command) { this.command = command; }
     addSettingTab() {}
@@ -22,7 +24,7 @@ function pluginFixture(saved) {
     if (name === 'obsidian') return {Plugin, Notice: class {constructor(message) { notices.push(message); }}, moment: () => ({isValid: () => true})};
     if (name === './settings') return {OuraSettingTab: class {}};
     if (name === './oura-api') return {default: class {async getSleepData() {throw new Error('Reconnect to Oura');}}};
-    if (name === './oauth') return {OuraOAuth: class {}, DEFAULT_REDIRECT_URI: 'obsidian://oura-oauth'};
+    if (name === './oauth') return {OuraOAuth: class {cancel() {}}, DEFAULT_REDIRECT_URI: 'obsidian://oura-oauth'};
     return {};
   }});
   return {plugin: new module.exports.default(), notices};
@@ -40,7 +42,8 @@ test('upgrade preserves personal token and templates without rewriting settings'
 
 test('an authentication failure does not mutate the note', async () => {
   const {plugin, notices} = pluginFixture({oauthTokens: {accessToken: 'test'}});
-  await plugin.onload();
+  plugin.onload();
+  await settle();
   let mutations = 0;
   await plugin.command.editorCallback({replaceSelection() { mutations++; }});
   assert.equal(mutations, 0);
@@ -50,8 +53,29 @@ test('an authentication failure does not mutate the note', async () => {
 
 test('legacy users see migration notice and imports are allowed to reach the API', async () => {
   const {plugin, notices} = pluginFixture({personalAccessToken: 'legacy'});
-  await plugin.onload();
+  plugin.onload();
+  await settle();
   await plugin.command.editorCallback({replaceSelection() { assert.fail('must not mutate on API failure'); }});
   assert.match(notices[0], /Please migrate to OAuth/);
   assert.equal(notices[1], 'Reconnect to Oura');
+});
+
+test('unloading before settings finish loading registers nothing', async () => {
+  let resolveLoad;
+  const {plugin, notices} = pluginFixture(undefined, () => new Promise(resolve => { resolveLoad = resolve; }));
+  plugin.onload();
+  plugin.onunload();
+  resolveLoad({personalAccessToken: 'legacy'});
+  await settle();
+  assert.equal(plugin.command, undefined);
+  assert.equal(plugin.oauth, undefined);
+  assert.deepEqual(notices, []);
+});
+
+test('a settings load failure is reported as a notice instead of an unhandled rejection', async () => {
+  const {plugin, notices} = pluginFixture(undefined, async () => { throw new Error('disk error'); });
+  plugin.onload();
+  await settle();
+  assert.equal(plugin.command, undefined);
+  assert.deepEqual(notices, ['Oura Ring could not load its settings. Reload the plugin to try again.']);
 });

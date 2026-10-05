@@ -161,11 +161,27 @@ export default class OuraPlugin extends Plugin {
 	settings: OuraPluginSettings;
 	oauth: OuraOAuth;
 	private settingsTab: OuraSettingTab;
+	private lifecycle = 0;
 
-	async onload() {
-		console.log('Loading Oura Ring plugin');
+	/**
+	 * Starts initialization without blocking Obsidian and reports a load failure as a notice.
+	 */
+	onload(): void {
+		const lifecycle = ++this.lifecycle;
+		this.initialize(lifecycle).catch(() => {
+			if (lifecycle === this.lifecycle) {
+				new Notice('Oura Ring could not load its settings. Reload the plugin to try again.');
+			}
+		});
+	}
 
+	/**
+	 * Loads settings, then registers the OAuth callback, command, and settings tab that depend on them.
+	 * Stops without registering anything if the plugin unloaded while settings were loading.
+	 */
+	private async initialize(lifecycle: number): Promise<void> {
 		await this.loadSettings();
+		if (lifecycle !== this.lifecycle) return;
 		if (this.settings.personalAccessToken && !this.settings.oauthTokens) {
 			new Notice('Oura is using a legacy personal access token. Please migrate to OAuth in the plugin settings.');
 		}
@@ -184,7 +200,7 @@ export default class OuraPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'insert-oura-ring-stats',
-			name: 'Insert Oura Ring Stats',
+			name: 'Insert daily stats',
 			editorCallback: async (editor: Editor) => {
 				if (!this.settings.oauthTokens && !this.settings.personalAccessToken) {
 					new Notice('Connect to Oura in the plugin settings first.')
@@ -219,6 +235,7 @@ export default class OuraPlugin extends Plugin {
 	}
 
 	onunload() {
+		this.lifecycle++;
 		this.oauth?.cancel();
 	}
 

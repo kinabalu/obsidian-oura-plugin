@@ -44,7 +44,7 @@ export class OuraOAuth {
     const generation = this.generation;
     const signInGeneration = this.signInGeneration;
     // Preserve an in-flight rotation before replacing the connection with a new grant.
-    if (this.refresh) await this.refresh.catch(() => {});
+    if (this.refresh !== null) await this.refresh.catch(() => {});
     if (generation !== this.generation || signInGeneration !== this.signInGeneration) {
       throw new Error('Oura connection changed. Please connect again.');
     }
@@ -94,7 +94,7 @@ export class OuraOAuth {
     const tokens = this.settings.oauthTokens;
     if (!tokens) throw new Error('Connect to Oura in the plugin settings first.');
     if (tokens.expiresAt > Date.now() + 60_000 && tokens.accessToken !== rejectedToken) return tokens.accessToken;
-    if (!this.refresh) {
+    if (this.refresh === null) {
       this.refresh = this.exchange({grant_type: 'refresh_token', refresh_token: tokens.refreshToken})
         .finally(() => { this.refresh = null; });
     }

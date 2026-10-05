@@ -1,9 +1,9 @@
 {
 	"id": "obsidian-oura-plugin",
 	"name": "Oura Ring",
-	"version": "0.2.7",
+	"version": "0.2.8",
 	"minAppVersion": "1.5.12",
-	"description": "A plugin for importing Oura Ring data from the Cloud-based API",
+	"description": "Import Oura Ring sleep, readiness, and activity data from the Oura Cloud API into your notes.",
 	"author": "Andrew Lombardi",
 	"authorUrl": "https://mysticcoders.com",
 	"isDesktopOnly": false

@@ -10,7 +10,7 @@ export class OuraSettingTab extends PluginSettingTab {
   display(): void {
     const {containerEl} = this;
     containerEl.empty();
-    containerEl.createEl('h2', {text: 'Oura Ring Settings'});
+    new Setting(containerEl).setName('Connection').setHeading();
     containerEl.createEl('p', {text: 'Create your own Oura application and enter its credentials below. Register the exact redirect URI shown here.'});
     containerEl.createEl('a', {text: 'Manage Oura applications', href: 'https://cloud.ouraring.com/oauth/applications'});
     containerEl.createEl('p', {text: 'Credentials and tokens are stored in this vault’s plugin data.json without encryption. Keep that file private and avoid syncing it between devices; refresh tokens are single-use.'});
@@ -67,6 +67,7 @@ export class OuraSettingTab extends PluginSettingTab {
         catch (error) { this.showError(error); }
       }));
 
+    new Setting(containerEl).setName('Templates').setHeading();
     for (const [key, label] of [
       ['sleepTemplate', 'Sleep Template'], ['activitiesTemplate', 'Activities Template'], ['readinessTemplate', 'Readiness Template'],
     ] as const) {

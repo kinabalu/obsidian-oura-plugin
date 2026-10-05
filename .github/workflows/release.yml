@@ -7,9 +7,8 @@ on:
 
 permissions:
   contents: write
-
-env:
-  PLUGIN_NAME: obsidian-oura-plugin
+  id-token: write
+  attestations: write
 
 jobs:
   build:
@@ -24,16 +23,19 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
-      - name: Package and publish
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
+      - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          mkdir "$PLUGIN_NAME"
-          cp main.js manifest.json styles.css "$PLUGIN_NAME/"
-          zip -r "$PLUGIN_NAME-$RELEASE_TAG.zip" "$PLUGIN_NAME"
           gh release create "$RELEASE_TAG" \
             --verify-tag \
             --title "Oura Ring $RELEASE_TAG" \
             --notes-file RELEASE_NOTES.md \
-            main.js manifest.json styles.css "$PLUGIN_NAME-$RELEASE_TAG.zip"
+            main.js manifest.json styles.css

@@ -53,4 +53,4 @@ No personal vault has been modified for testing. Release validation status is re
 
 ## Release version consistency
 
-Symptom: published tags through 0.2.6 contained a 0.2.3 manifest. Cause: release tags were not checked against plugin metadata. Prevention: 0.2.7 updates package.json, package-lock.json, manifest.json, and versions.json together; check and release CI run check:version, with a tag equality check during release. Publication uses the triggering tag and uploads the production bundle, manifest, stylesheet, and ZIP. Live provider and device checks remain unverified.
+Symptom: published tags through 0.2.6 contained a 0.2.3 manifest. Cause: release tags were not checked against plugin metadata. Prevention: 0.2.7 updates package.json, package-lock.json, manifest.json, and versions.json together; check and release CI run check:version, with a tag equality check during release. Publication uses the triggering tag and uploads only the production bundle, manifest, and stylesheet, with GitHub build provenance attestations for each. Live provider and device checks remain unverified.
